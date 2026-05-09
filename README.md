@@ -1,59 +1,63 @@
-# NotebookLM RAG
+# notebooklm-rag
 
-Assignment 03 — small NotebookLM clone. Upload a PDF or text file, ask questions, get answers based on the document.
+assignment 03 submission. small notebooklm clone — upload a pdf or text file, ask questions about it, get answers from the file.
 
-## Stack
+live: https://notebooklm-rag-eta.vercel.app
 
-- Next.js 16 (App Router)
-- Qdrant (vector DB)
-- HuggingFace Inference API for embeddings (`all-MiniLM-L6-v2`)
-- Groq for the LLM (`llama-3.1-8b-instant`)
-- `unpdf` for PDF parsing
+## stack
 
-All free tier.
+- next.js (app router) + typescript
+- qdrant cloud (vector db, free tier)
+- huggingface inference for embeddings (`sentence-transformers/all-MiniLM-L6-v2`)
+- groq for the llm (`llama-3.1-8b-instant`)
+- unpdf for parsing pdfs
 
-## Chunking
+all free.
 
-Used LangChain's `RecursiveCharacterTextSplitter`:
+## how it works
 
-- chunk size: 1000 chars
-- overlap: 200 chars
+upload flow:
+1. file goes to `/api/upload`
+2. text extracted (per page for pdfs)
+3. chunked with `RecursiveCharacterTextSplitter`, size 1000 with 200 overlap
+4. each chunk embedded with hf
+5. pushed into a qdrant collection named after the document id
 
-Recursive splitting tries to break on paragraphs first, then lines, then words, so chunks usually stay on natural boundaries. The 200 char overlap helps when an answer is split across two chunks.
+ask flow:
+1. question goes to `/api/chat` with the document id
+2. embed the question, pull top 4 chunks from the matching qdrant collection
+3. send chunks + question to groq with a system prompt that says "only answer from the context, otherwise say you can't find it"
+4. return the answer + the chunks used
 
-For PDFs each page is split separately and the page number is stored as metadata, so the model can cite pages.
+i went with the recursive splitter because it tries to break on paragraph -> line -> sentence boundaries instead of slicing mid-word. the 200 char overlap helps when an answer sits across a chunk boundary. one collection per uploaded file means questions about doc A can't accidentally pull from doc B.
 
-## Pipeline
+## running it locally
 
-1. `POST /api/upload` — accepts PDF or txt, extracts text, chunks it, embeds with HF, stores in a Qdrant collection (one per uploaded file).
-2. `POST /api/chat` — embeds the question, pulls top 4 chunks from the collection, sends them to Groq with a system prompt that says "only use the context".
-
-## Setup
-
-```bash
+```
 npm install
 cp .env.example .env.local
 npm run dev
 ```
 
-Fill in `.env.local`:
+then fill in `.env.local`:
 
-- `GROQ_API_KEY` — from https://console.groq.com
-- `HUGGINGFACEHUB_API_KEY` — from https://huggingface.co/settings/tokens
-- `QDRANT_URL` and `QDRANT_API_KEY` — from https://cloud.qdrant.io (free tier)
+```
+GROQ_API_KEY=
+HUGGINGFACEHUB_API_KEY=
+QDRANT_URL=
+QDRANT_API_KEY=
+```
 
-Running Qdrant locally instead:
+keys are from https://console.groq.com, https://huggingface.co/settings/tokens, https://cloud.qdrant.io.
 
-```bash
+if you'd rather run qdrant locally instead of cloud:
+
+```
 docker run -p 6333:6333 qdrant/qdrant
 ```
 
-then set `QDRANT_URL=http://localhost:6333` and leave the api key empty.
+then `QDRANT_URL=http://localhost:6333` and leave the api key empty.
 
-## Deploy
+## deploying
 
-Push to GitHub, import on Vercel, add the four env vars in project settings.
-
-## Notes
-
-The model is told only to answer from the context. If the answer isn't in the document it should say so. Temperature is set low (0.2) to keep answers tied to the source.
+pushed the repo to github, imported it on vercel, pasted the four env vars in project settings, hit deploy. that was it.
