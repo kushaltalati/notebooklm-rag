@@ -36,10 +36,10 @@ export default function Notebook() {
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      if (!res.ok) throw new Error(data.error || "upload failed");
       setDoc(data);
-    } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Upload failed");
+    } catch (e: any) {
+      setErr(e?.message || "upload failed");
     } finally {
       setUploading(false);
     }
@@ -59,14 +59,11 @@ export default function Notebook() {
         body: JSON.stringify({ documentId: doc.documentId, question }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Chat failed");
+      if (!res.ok) throw new Error(data.error || "chat failed");
       setMessages((m) => [...m, { role: "assistant", content: data.answer }]);
       setLastSources(data.sources || []);
-    } catch (e: unknown) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: e instanceof Error ? e.message : "Error" },
-      ]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { role: "assistant", content: e?.message || "error" }]);
       setLastSources([]);
     } finally {
       setBusy(false);
@@ -75,22 +72,18 @@ export default function Notebook() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header */}
       <header className="border-b border-[var(--gh-border)] bg-[var(--gh-canvas)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 16 16" width="32" height="32" aria-hidden="true">
-              <path
-                fill="#1f2328"
-                d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"
-              />
-            </svg>
-            <span className="text-sm font-semibold text-[var(--gh-fg)]">
-              kushaltalati / <span className="font-bold">notebooklm-rag</span>
-            </span>
-            <span className="ml-1 rounded-full border border-[var(--gh-border)] px-2 py-[1px] text-[11px] font-medium text-[var(--gh-fg-muted)]">
-              Public
-            </span>
+            <div className="grid h-7 w-7 place-items-center rounded-md bg-[var(--gh-fg)] text-white">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+                <line x1="9" y1="17" x2="13" y2="17" />
+              </svg>
+            </div>
+            <span className="text-sm font-semibold text-[var(--gh-fg)]">notebooklm-rag</span>
           </div>
           <a
             href="https://github.com/kushaltalati/notebooklm-rag"
@@ -98,26 +91,24 @@ export default function Notebook() {
             rel="noopener noreferrer"
             className="rounded-md border border-[var(--gh-border)] bg-[var(--gh-canvas-subtle)] px-3 py-1 text-xs font-medium text-[var(--gh-fg)] hover:bg-[#eaeef2]"
           >
-            View on GitHub
+            source
           </a>
         </div>
       </header>
 
-      {/* Main */}
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
         <div className="mb-4">
-          <h1 className="text-xl font-semibold text-[var(--gh-fg)]">Chat with a document</h1>
+          <h1 className="text-xl font-semibold text-[var(--gh-fg)]">chat with a document</h1>
           <p className="mt-1 text-sm text-[var(--gh-fg-muted)]">
-            Upload a PDF or text file. Ask questions. Answers come only from the document.
+            upload a pdf or text file. ask questions. answers come only from the document.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[280px_1fr]">
-          {/* Sidebar */}
           <aside className="flex flex-col gap-4">
             <div className="rounded-md border border-[var(--gh-border)] bg-[var(--gh-canvas)]">
               <div className="border-b border-[var(--gh-border)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--gh-fg-muted)]">
-                Document
+                document
               </div>
               <div className="p-3 text-sm">
                 <input
@@ -139,7 +130,7 @@ export default function Notebook() {
                     </div>
                   </div>
                 ) : (
-                  <div className="mb-3 text-[var(--gh-fg-muted)]">No document yet.</div>
+                  <div className="mb-3 text-[var(--gh-fg-muted)]">no document yet.</div>
                 )}
 
                 <button
@@ -147,7 +138,7 @@ export default function Notebook() {
                   disabled={uploading}
                   className="w-full rounded-md bg-[var(--gh-success)] px-3 py-[5px] text-sm font-medium text-white shadow-sm hover:bg-[var(--gh-success-hover)] disabled:opacity-60"
                 >
-                  {uploading ? "Indexing..." : doc ? "Replace document" : "Upload document"}
+                  {uploading ? "indexing..." : doc ? "replace document" : "upload document"}
                 </button>
                 {err && (
                   <div className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
@@ -158,26 +149,25 @@ export default function Notebook() {
             </div>
 
             <div className="rounded-md border border-[var(--gh-border)] bg-[var(--gh-canvas)] p-3 text-xs text-[var(--gh-fg-muted)]">
-              <div className="mb-2 font-semibold uppercase tracking-wide">About</div>
+              <div className="mb-2 font-semibold uppercase tracking-wide">about</div>
               <p className="leading-relaxed">
-                RAG pipeline: chunk → embed (HF MiniLM-L6) → Qdrant → retrieve top 4 → Groq Llama 3.1.
-                Answers cite page numbers from the source.
+                rag pipeline: chunk → embed (hf miniLM-L6) → qdrant → retrieve top 4 → groq llama 3.1.
+                answers cite page numbers from the source.
               </p>
             </div>
           </aside>
 
-          {/* Chat panel */}
           <section className="flex min-h-[520px] flex-col rounded-md border border-[var(--gh-border)] bg-[var(--gh-canvas)]">
             <div className="flex items-center justify-between border-b border-[var(--gh-border)] px-4 py-2">
               <div className="text-xs font-semibold uppercase tracking-wide text-[var(--gh-fg-muted)]">
-                Conversation
+                conversation
               </div>
               {lastSources.length > 0 && (
                 <button
                   onClick={() => setShowSources((v) => !v)}
                   className="text-xs font-medium text-[var(--gh-accent)] hover:underline"
                 >
-                  {showSources ? "Hide" : "Show"} sources ({lastSources.length})
+                  {showSources ? "hide" : "show"} sources ({lastSources.length})
                 </button>
               )}
             </div>
@@ -186,8 +176,8 @@ export default function Notebook() {
               {messages.length === 0 ? (
                 <div className="grid h-full place-items-center text-sm text-[var(--gh-fg-muted)]">
                   {doc
-                    ? "Ask anything about the document."
-                    : "Upload a document on the left to get started."}
+                    ? "ask anything about the document."
+                    : "upload a document on the left to get started."}
                 </div>
               ) : (
                 messages.map((m, i) => (
@@ -205,14 +195,14 @@ export default function Notebook() {
               )}
               {busy && (
                 <div className="mr-auto rounded-md border border-[var(--gh-border)] bg-[var(--gh-canvas-subtle)] px-3 py-2 text-sm text-[var(--gh-fg-muted)]">
-                  Thinking…
+                  thinking…
                 </div>
               )}
 
               {showSources && lastSources.length > 0 && (
                 <div className="mt-4 space-y-2 border-t border-dashed border-[var(--gh-border)] pt-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[var(--gh-fg-muted)]">
-                    Retrieved chunks
+                    retrieved chunks
                   </div>
                   {lastSources.map((s, i) => (
                     <div
@@ -241,7 +231,7 @@ export default function Notebook() {
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder={doc ? "Ask a question..." : "Upload a document first"}
+                  placeholder={doc ? "ask a question..." : "upload a document first"}
                   disabled={!doc || busy}
                   className="flex-1 bg-transparent px-1 py-1 text-sm outline-none disabled:opacity-50"
                 />
@@ -250,7 +240,7 @@ export default function Notebook() {
                   disabled={!doc || busy || !q.trim()}
                   className="rounded-md bg-[var(--gh-success)] px-3 py-1 text-xs font-medium text-white hover:bg-[var(--gh-success-hover)] disabled:opacity-50"
                 >
-                  Ask
+                  ask
                 </button>
               </div>
             </form>
@@ -259,7 +249,7 @@ export default function Notebook() {
       </main>
 
       <footer className="border-t border-[var(--gh-border)] bg-[var(--gh-canvas)] py-3 text-center text-xs text-[var(--gh-fg-muted)]">
-        Built with Next.js · Qdrant · HuggingFace · Groq
+        next.js · qdrant · huggingface · groq
       </footer>
     </div>
   );
